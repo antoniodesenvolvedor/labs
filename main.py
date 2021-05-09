@@ -8,8 +8,26 @@ from product_favorite_list import ProductFavoriteList
 
 app = Flask(__name__)
 
+
+
+def auth_user(request):
+    try:
+        username = request.authorization.username
+        password = request.authorization.password
+
+        if username != 'labs' or password != 'labs_123':
+            return False
+        else:
+            return True
+    except Exception as e:
+        return False
+
+
+
 @app.route('/cliente', methods=['GET'])
 def fetch_customer():
+    if not auth_user(request):
+        return "É necessário autenticar com usuário e senha validos", 403
 
     customer_email = request.args.get("customer_email")
 
@@ -42,6 +60,9 @@ def fetch_customer():
 
 @app.route('/cliente', methods=['POST'])
 def insert_customer():
+    if not auth_user(request):
+        return "É necessário autenticar com usuário e senha validos", 403
+
     customer_body = request.json
 
     if not customer_body:
@@ -74,6 +95,9 @@ def insert_customer():
 
 @app.route('/cliente/<customer_email>', methods=['DELETE'])
 def delete_customer(customer_email):
+    if not auth_user(request):
+        return "É necessário autenticar com usuário e senha validos", 403
+
     try:
         customer_handler = Customer()
 
@@ -95,6 +119,8 @@ def delete_customer(customer_email):
 
 @app.route('/cliente/', methods=['PUT'])
 def update_customer():
+    if not auth_user(request):
+        return "É necessário autenticar com usuário e senha validos", 403
     customer_body = request.json
 
     if not customer_body:
@@ -127,6 +153,9 @@ def update_customer():
 
 @app.route('/lista_favoritos', methods=['GET'])
 def fetch_favorite_list():
+    if not auth_user(request):
+        return "É necessário autenticar com usuário e senha validos", 403
+
     customer_email = request.args.get("customer_email")
 
     if not customer_email:
@@ -161,6 +190,9 @@ def fetch_favorite_list():
 
 @app.route('/lista_favoritos', methods=['POST'])
 def insert_favorite_item():
+    if not auth_user(request):
+        return "É necessário autenticar com usuário e senha validos", 403
+
     product_body = request.json
 
     if not product_body:
@@ -215,6 +247,9 @@ def insert_favorite_item():
 
 @app.route('/lista_favoritos', methods=['DELETE'])
 def delete_favorite_item():
+    if not auth_user(request):
+        return "É necessário autenticar com usuário e senha validos", 403
+
     product_body = request.json
 
     if not product_body:

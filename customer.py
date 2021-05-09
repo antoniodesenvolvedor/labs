@@ -4,7 +4,7 @@ class Customer:
     def __init__(self):
         self.conn = psycopg2.connect(
             host="localhost",
-            database="postgres",
+            database="db_customers",
             user="postgres",
             password="labs"
         )

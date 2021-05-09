@@ -10,54 +10,54 @@ class Customer:
         )
 
 
-    def fetch_customers(self, customer_email):
+    def fetch_customer(self, customer_email):
 
-        customer_cursor = self.conn.cursor()
+        cursor = self.conn.cursor()
         query = '''
-            select customer_email, customer_name from tb_customers where customer_email = %s
+            select customer_id, customer_email, customer_name from tb_customers where customer_email = %s
         '''
-        customer_cursor.execute(query, (customer_email, ))
-        records = customer_cursor.fetchall()
+        cursor.execute(query, (customer_email, ))
+        records = cursor.fetchall()
         return records
 
-    def update_customers(self, customer_email, customer_name):
-        customer_cursor = self.conn.cursor()
+    def update_customer(self, customer_email, customer_name):
+        cursor = self.conn.cursor()
         query = '''
             update tb_customers set customer_name = %s where customer_email = %s
-            RETURNING customer_name
+            RETURNING customer_id
        '''
-        customer_cursor.execute(query, (customer_name, customer_email))
+        cursor.execute(query, (customer_name, customer_email))
         self.conn.commit()
-        records = customer_cursor.fetchall()
+        records = cursor.fetchall()
         if records:
             return True
         else:
             return False
 
     def insert_customer(self, customer_email, customer_name):
-        customer_cursor = self.conn.cursor()
+        cursor = self.conn.cursor()
         query = '''
-             insert into tb_customers (customer_name, customer_email, registration_date)
+             insert into tb_customers (customer_email, customer_name, registration_date)
              values (%s, %s, now())
-             RETURNING customer_email
+             RETURNING customer_id
         '''
-        customer_cursor.execute(query, (customer_name, customer_email))
+        cursor.execute(query, (customer_email, customer_name))
         self.conn.commit()
-        records = customer_cursor.fetchall()
+        records = cursor.fetchall()
         if records:
             return True
         else:
             return False
 
     def delete_customer(self, customer_email):
-        customer_cursor = self.conn.cursor()
+        cursor = self.conn.cursor()
         query = '''
             delete from tb_customers where customer_email = %s
-            RETURNING customer_email
+            RETURNING customer_id
         '''
-        customer_cursor.execute(query, (customer_email, ))
+        cursor.execute(query, (customer_email, ))
         self.conn.commit()
-        records = customer_cursor.fetchall()
+        records = cursor.fetchall()
 
         if records:
             return True

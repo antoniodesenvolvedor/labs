@@ -1,10 +1,9 @@
 from flask import Flask, request
 import json
-from customer import Customer
 import traceback
-from products import Products
-
-
+from customer import Customer
+from product_api import ProductAPI
+from product_favorite_list import ProductFavoriteList
 
 
 app = Flask(__name__)
@@ -19,18 +18,17 @@ def fetch_customer():
 
     try:
         customer_handler = Customer()
-        customer_result = customer_handler.fetch_customers(customer_email)
+        customer_result = customer_handler.fetch_customer(customer_email)
 
         if not customer_result:
             return "Email not found", 404
-
 
         customer_name = customer_result[0][0]
         customer_email = customer_result[0][1]
 
         customer_result = {
-            'customer_name':customer_name,
-            'customer_email':customer_email
+            'customer_name': customer_name,
+            'customer_email': customer_email
         }
 
         customer_result = json.dumps(customer_result)
@@ -45,6 +43,9 @@ def fetch_customer():
 @app.route('/cliente', methods=['POST'])
 def insert_customer():
     customer_body = request.json
+
+    if not customer_body:
+        return 'Corpo da requisição faltante', 400
     if 'customer_name' not in customer_body:
         return 'É necessário informar a chave customer_name no corpo da requisição', 400
     if 'customer_email' not in customer_body:
@@ -55,13 +56,12 @@ def insert_customer():
 
     try:
         customer_handler = Customer()
-
-        email_already_exists = customer_handler.fetch_customers(customer_email)
+        email_already_exists = customer_handler.fetch_customer(customer_email)
         if email_already_exists:
             return f'Email "{customer_email}" já cadastrado', 406
 
-        sucessful_operation = customer_handler.insert_customer(customer_email, customer_name)
-        if not sucessful_operation:
+        successful_operation = customer_handler.insert_customer(customer_email, customer_name)
+        if not successful_operation:
             return "Não foi possível inserir o cliente", 500
 
         return f'Cliente {customer_name} cadastrado com sucesso', 200
@@ -77,12 +77,12 @@ def delete_customer(customer_email):
     try:
         customer_handler = Customer()
 
-        email_already_exists = customer_handler.fetch_customers(customer_email)
+        email_already_exists = customer_handler.fetch_customer(customer_email)
         if not email_already_exists:
             return f'Email "{customer_email}" não existe', 404
 
-        sucessful_operation = customer_handler.delete_customer(customer_email)
-        if not sucessful_operation:
+        successful_operation = customer_handler.delete_customer(customer_email)
+        if not successful_operation:
             return "Não foi possível deletar o cliente", 500
 
         return f'Cliente com e-mail: {customer_email} apagado com sucesso', 200
@@ -96,6 +96,9 @@ def delete_customer(customer_email):
 @app.route('/cliente/', methods=['PUT'])
 def update_customer():
     customer_body = request.json
+
+    if not customer_body:
+        return 'Corpo da requisição faltante', 400
     if 'customer_name' not in customer_body:
         return 'É necessário informar a chave customer_name no corpo da requisição', 400
     if 'customer_email' not in customer_body:
@@ -106,12 +109,12 @@ def update_customer():
 
     try:
         customer_handler = Customer()
-        email_already_exists = customer_handler.fetch_customers(customer_email)
+        email_already_exists = customer_handler.fetch_customer(customer_email)
         if not email_already_exists:
             return f'Email "{customer_email}" não existe', 404
 
-        sucessful_operation = customer_handler.update_customers(customer_email, customer_name)
-        if not sucessful_operation:
+        successful_operation = customer_handler.update_customer(customer_email, customer_name)
+        if not successful_operation:
             return "Não foi possível atualizar o cliente", 500
 
         return f'Cliente com e-mail {customer_email} atualizado com sucesso', 200
@@ -131,18 +134,24 @@ def fetch_favorite_list():
 
     try:
         customer_handler = Customer()
-        email_already_exists = customer_handler.fetch_customers(customer_email)
+        email_already_exists = customer_handler.fetch_customer(customer_email)
         if not email_already_exists:
-            return f'Email "{customer_email}" não existe', 404
+            return f'Email "{customer_email}" inexistente', 404
 
-        product_handler = Products()
-        product_list = product_handler.fetch_favorite_list_items(customer_email)
+        product_favorite_list_handler = ProductFavoriteList()
+        product_favorite_list = product_favorite_list_handler.fetch_favorite_list_items(customer_email)
 
-        if not product_list:
-            return "Lista não encontrada", 404
+        if not product_favorite_list:
+            return "Lista de favoritos não encontrada", 404
 
-        product_list = json.dumps(product_list)
-        return product_list, 200
+        print(product_favorite_list)
+        product_favorite_list = [{'customer_email': item[0], 'product_id': item[1]}
+                                 for item in product_favorite_list]
+        # product_favorite_list =  [item[0] for item in product_favorite_list]
+
+
+        product_favorite_list = json.dumps(product_favorite_list)
+        return product_favorite_list, 200
     except:
         error_message = traceback.print_exc()
         print(error_message)
@@ -154,6 +163,8 @@ def fetch_favorite_list():
 def insert_favorite_item():
     product_body = request.json
 
+    if not product_body:
+        return 'Corpo da requisição faltante', 400
     if 'customer_email' not in product_body:
         return 'É necessário informar a chave customer_email no corpo da requisição', 400
     if 'product_id' not in product_body:
@@ -164,22 +175,32 @@ def insert_favorite_item():
 
     try:
         customer_handler = Customer()
-        email_already_exists = customer_handler.fetch_customers(customer_email)
+        email_already_exists = customer_handler.fetch_customer(customer_email)
         if not email_already_exists:
-            return f'Email "{customer_email}" não existe', 404
+            return f'Email "{customer_email}" inexistente', 404
+
+        status_code, product_response = ProductAPI.get_product_by_id_api(product_id)
+
+        if status_code == 404:
+            return f'ID produto inexistente {product_id}', 404
+        elif status_code != 200:
+            return f'Erro ao consultar produto na api de produtos, response {product_response}', status_code
+
+        product = json.loads(product_response)
+        product_id = product['id'] if 'id' in product else None
+
+        if not product_id:
+            return f'Erro ao consultar produto na api de produtos, resposne {product_response}', status_code
 
 
-        product = Products.get_product_by_id_api(product_id)
-        if not product:
-            return f'ID produto não inexistente {product_id}', 404
-        product = json.loads(product)
 
-        product_handler = Products()
-        product_already_in_list = product_handler.get_item_by_id(customer_email, product_id)
+        product_favorite_list_handler = ProductFavoriteList()
+        product_already_in_list = product_favorite_list_handler.get_favorite_list_item(customer_email, product_id)
+
         if product_already_in_list:
             return f'Produto já cadastrado na lista do cliente {customer_email}', 400
 
-        was_item_added = product_handler.add_items_to_favorite_list(customer_email, product )
+        was_item_added = product_favorite_list_handler.add_favorite_list_item(customer_email, product_id)
 
         if was_item_added:
             return "Item adicionado com sucesso", 200
@@ -196,6 +217,8 @@ def insert_favorite_item():
 def delete_favorite_item():
     product_body = request.json
 
+    if not product_body:
+        return 'Corpo da requisição faltante', 400
     if 'customer_email' not in product_body:
         return 'É necessário informar a chave customer_email no corpo da requisição', 400
     if 'product_id' not in product_body:
@@ -206,16 +229,16 @@ def delete_favorite_item():
 
     try:
         customer_handler = Customer()
-        email_already_exists = customer_handler.fetch_customers(customer_email)
+        email_already_exists = customer_handler.fetch_customer(customer_email)
         if not email_already_exists:
-            return f'Email "{customer_email}" não existe', 404
+            return f'Email "{customer_email}" inexistente', 404
 
-        product_handler = Products()
-        product_already_in_list = product_handler.get_item_by_id(customer_email, product_id)
+        product_favorite_list_handler = ProductFavoriteList()
+        product_already_in_list = product_favorite_list_handler.get_favorite_list_item(customer_email, product_id)
         if not product_already_in_list:
             return f'Produto não encontrado na lista do cliente {customer_email}', 404
 
-        was_item_deleted = product_handler.remove_item_from_list(customer_email, product_id)
+        was_item_deleted = product_favorite_list_handler.delete_favorite_list_item(customer_email, product_id)
 
         if was_item_deleted:
             return "Item deletado com sucesso", 200
@@ -225,6 +248,5 @@ def delete_favorite_item():
         error_message = traceback.print_exc()
         print(error_message)
         return error_message, 500
-
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

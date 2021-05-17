@@ -1,10 +1,10 @@
 from flask import Flask, request
 import json
-import traceback
 from product_api import ProductAPI
 from database import db_session, init_db
 from models import Customer, FavoriteListItem
 from sqlalchemy import update, delete
+from settings import app_autentication
 
 app = Flask(__name__)
 init_db()
@@ -19,7 +19,7 @@ def auth_user(request):
         username = request.authorization.username
         password = request.authorization.password
 
-        if username != 'labs' or password != 'labs_123':
+        if username != app_autentication['username'] or password != app_autentication['password']:
             return False
         else:
             return True

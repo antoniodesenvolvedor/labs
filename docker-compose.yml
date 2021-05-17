@@ -7,6 +7,8 @@ services:
     restart: always
     ports:
       - "5000:5000"
+    environment:
+      prod: "True"
     networks:
       - labs
     depends_on:
@@ -19,6 +21,8 @@ services:
     restart: always
     volumes:
       - postgres_volume:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
     environment:
       TZ: GMT+3
       POSTGRES_USER: postgres

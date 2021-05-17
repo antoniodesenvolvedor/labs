@@ -4,7 +4,6 @@ from sqlalchemy.ext.declarative import declarative_base
 from settings import connection_string
 from settings import connection_string_dev
 import os
-print(os.environ.get('prod'))
 engine = create_engine(connection_string if os.environ.get('prod') == 'True' else connection_string_dev
                        , convert_unicode=True)
 db_session = scoped_session(sessionmaker(autocommit=False,

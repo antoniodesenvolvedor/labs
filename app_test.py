@@ -2,14 +2,16 @@ import pytest
 from app import app
 import json
 from base64 import b64encode
-
+from settings import app_autentication
 
 
 @pytest.fixture(scope="class")
 def client():
     return app.test_client()
 
-global_credentials = b64encode(b"labs:labs_123").decode('utf-8')
+auth_tuple = (app_autentication['username'], app_autentication['password'])
+global_credentials = b64encode(str.encode("%s:%s" % auth_tuple)).\
+    decode('utf-8')
 
 
 class TestCustomer:
@@ -40,8 +42,8 @@ class TestCustomer:
         response = self._client.get(f'/cliente?customer_email={self._customer["customer_email"]}')
         assert response.status_code == 403
 
-        response = self._client.get(f'/cliente?customer_email={self._non_existing_customer["customer_email"]}'
-                              , headers=self._headers)
+        response = self._client.get(f'/cliente?customer_email={self._non_existing_customer["customer_email"]}',
+                                    headers=self._headers)
         assert response.status_code == 404
 
         response = self._client.get(f'/cliente', headers=self._headers)

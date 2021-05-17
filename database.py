@@ -1,8 +1,9 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
+from settings_hide import connection_string
 
-engine = create_engine('postgresql+psycopg2://postgres:secure_password@localhost/db_customer', convert_unicode=True)
+engine = create_engine(connection_string, convert_unicode=True)
 db_session = scoped_session(sessionmaker(autocommit=False,
                                          autoflush=False,
                                          bind=engine))

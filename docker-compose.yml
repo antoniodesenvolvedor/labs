@@ -1,0 +1,37 @@
+version: "3.9"
+
+services:
+  api_labs:
+    build: .
+    container_name: api_labs
+    restart: always
+    ports:
+      - "5000:5000"
+    networks:
+      - labs
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: "postgres"
+    container_name: postgres
+    restart: always
+    volumes:
+      - postgres_volume:/var/lib/postgresql/data
+    environment:
+      TZ: GMT+3
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secure_password
+      POSTGRES_DB: db_customer
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - labs
+networks:
+  labs:
+volumes:
+  postgres_volume:

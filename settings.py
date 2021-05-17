@@ -1,0 +1,1 @@
+connection_string = 'postgresql+psycopg2://postgres:secure_password@postgres/db_customer'

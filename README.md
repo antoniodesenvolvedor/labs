@@ -9,5 +9,8 @@ Configurar as senhas no arquivo settings.py
 
 Clonar o repositório e rodar o comando docker-compose up -d
 
+# Disclaimer
+Fiz a título de aprendizado, não participei do processo seletivo.
+
 
 

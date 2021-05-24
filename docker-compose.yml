@@ -1,16 +1,16 @@
 version: "3.9"
 
 services:
-  api_labs:
+  api_favorite_list:
     build: .
-    container_name: api_labs
+    container_name: api_favorite_list
     restart: always
     ports:
       - "5000:5000"
     environment:
       prod: "True"
     networks:
-      - labs
+      - api_favorite_list
     depends_on:
       postgres:
         condition: service_healthy
@@ -34,8 +34,8 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - labs
+      - api_favorite_list
 networks:
-  labs:
+  api_favorite_list:
 volumes:
   postgres_volume:

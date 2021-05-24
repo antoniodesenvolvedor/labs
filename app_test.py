@@ -9,6 +9,7 @@ from settings import app_autentication
 def client():
     return app.test_client()
 
+
 auth_tuple = (app_autentication['username'], app_autentication['password'])
 global_credentials = b64encode(str.encode("%s:%s" % auth_tuple)).\
     decode('utf-8')
@@ -37,6 +38,7 @@ class TestCustomer:
             "Authorization": f"Basic {global_credentials}",
             "Content-Type": "application/json"
         }
+
 
     def _test_get(self):
         response = self._client.get(f'/cliente?customer_email={self._customer["customer_email"]}')
@@ -78,6 +80,7 @@ class TestCustomer:
 
 
     def _test_put(self):
+
         response = self._client.put('/cliente', json=self._new_customer_name)
         assert response.status_code == 403
 

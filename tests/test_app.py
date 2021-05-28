@@ -1,9 +1,12 @@
 import pytest
-from app import app
+from src.controllers.customer import *
+from src.controllers.favorite_product_list import *
 import json
 from base64 import b64encode
 from settings import app_autentication
 
+app = server.app
+api = server.api
 
 @pytest.fixture(scope="class")
 def client():
@@ -42,7 +45,7 @@ class TestCustomer:
 
     def _test_get(self):
         response = self._client.get(f'/cliente?customer_email={self._customer["customer_email"]}')
-        assert response.status_code == 403
+        assert response.status_code == 401
 
         response = self._client.get(f'/cliente?customer_email={self._non_existing_customer["customer_email"]}',
                                     headers=self._headers)
@@ -54,7 +57,7 @@ class TestCustomer:
 
     def _test_post(self):
         response = self._client.post('/cliente', json=self._customer)
-        assert response.status_code == 403
+        assert response.status_code == 401
 
         response = self._client.post('/cliente', headers=self._headers)
         assert response.status_code == 400
@@ -82,7 +85,7 @@ class TestCustomer:
     def _test_put(self):
 
         response = self._client.put('/cliente', json=self._new_customer_name)
-        assert response.status_code == 403
+        assert response.status_code == 401
 
         response = self._client.put('/cliente', headers=self._headers)
         assert response.status_code == 400
@@ -104,25 +107,23 @@ class TestCustomer:
         assert returned_message['email'] == self._new_customer_name['customer_email']
 
     def _test_delete(self):
-        response = self._client.delete(f'/cliente/{self._non_existing_customer["customer_email"]}')
-        assert response.status_code == 403
+        response = self._client.delete('/cliente', json=self._non_existing_customer)
+        assert response.status_code == 401
 
-        response = self._client.delete(f'/cliente/{self._non_existing_customer["customer_email"]}',
-                                       headers=self._headers)
+
+        response = self._client.delete('/cliente', json=self._non_existing_customer, headers=self._headers)
         assert response.status_code == 404
 
-        response = self._client.delete(f'/cliente/{self._customer["customer_email"]}',
-                                       headers=self._headers)
+        response = self._client.delete('/cliente', json=self._customer, headers=self._headers)
         assert response.status_code == 200
 
-        response = self._client.get(f'/cliente?customer_email={self._customer["customer_email"]}',
-                                    headers=self._headers)
+        response = self._client.delete('/cliente', json=self._customer, headers=self._headers)
         assert response.status_code == 404
 
     def _delete_previous_data(self):
-        self._client.delete(f'/cliente/{self._customer["customer_email"]}', headers=self._headers)
-        self._client.delete(f'/cliente/{self._new_customer_name["customer_email"]}', headers=self._headers)
-        self._client.delete(f'/cliente/{self._non_existing_customer["customer_email"]}', headers=self._headers)
+        self._client.delete('/cliente', json=self._customer, headers=self._headers)
+        self._client.delete('/cliente', json=self._new_customer_name, headers=self._headers)
+        self._client.delete('/cliente', json=self._non_existing_customer, headers=self._headers)
 
 
     def test_customer(self, client):
@@ -166,7 +167,7 @@ class TestFavoriteListItem:
 
     def _test_get(self):
         response = self._client.get('/lista_favoritos')
-        assert response.status_code == 403
+        assert response.status_code == 401
 
         response = self._client.get(f'/lista_favoritos', headers=self._headers)
         assert response.status_code == 400
@@ -181,7 +182,7 @@ class TestFavoriteListItem:
 
     def _test_post(self):
         response = self._client.post('/lista_favoritos', json=self._id_product_and_customer_email)
-        assert response.status_code == 403
+        assert response.status_code == 401
 
         response = self._client.post('/lista_favoritos', headers=self._headers)
         assert response.status_code == 400
@@ -200,7 +201,7 @@ class TestFavoriteListItem:
 
         response = self._client.post('/lista_favoritos', json=self._id_product_and_customer_email,
                                      headers=self._headers)
-        assert response.status_code == 400
+        assert response.status_code == 406
 
         response = self._client.get(
             f'/lista_favoritos?customer_email={self._id_product_and_customer_email["customer_email"]}',
@@ -212,7 +213,7 @@ class TestFavoriteListItem:
 
     def _test_delete(self):
         response = self._client.delete('/lista_favoritos', json=self._id_product_and_customer_email)
-        assert response.status_code == 403
+        assert response.status_code == 401
 
         response = self._client.delete('/lista_favoritos', headers=self._headers)
         assert response.status_code == 400

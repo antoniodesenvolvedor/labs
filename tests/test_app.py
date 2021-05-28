@@ -1,9 +1,10 @@
 import pytest
-from src.controllers.customer import *
-from src.controllers.favorite_product_list import *
+import src.controllers.customer
+import src.controllers.favorite_product_list
 import json
 from base64 import b64encode
 from settings import app_autentication
+from src.server.server import server
 
 app = server.app
 api = server.api
